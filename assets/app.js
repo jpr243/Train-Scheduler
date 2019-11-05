@@ -52,85 +52,66 @@ $("#addTrain").on("click", function(event) {
   console.log(tempTrain.firstTrain);
   console.log(tempTrain.frequency);
 
-  alert("Train successfully added");
-
   //reset the input boxes
 
-  $("trainName"), val("");
-  $("destination"), val("");
-  $("firstTrain"), val("");
-  $("frequency"), val("");
+  $("trainName").val("");
+  $("destination").val("");
+  $("firstTrain").val("");
+  $("frequency").val("");
 });
 
 //This handles the Firebase event that pulls the data into the html and formats correctly
 
-database.ref().on(
-  "child_added",
-  function(snapshot, previousChildKey) {
-    console.log(snapshot.val());
+database.ref().on("child_added", function(snapshot) {
+  console.log(snapshot.val());
 
-    //store all in a variable
+  //store all in a variable
 
-    var dbName = snapshot.val().trainName;
-    var dbDestination = snapshot.val().destination;
-    var dbFirstTrain = snapshot.val().firstTrain;
-    var dbFrequency = snapshot.val().frequency;
+  var dbName = snapshot.val().trainName;
+  var dbDestination = snapshot.val().destination;
+  var dbFirstTrain = snapshot.val().firstTrain;
+  var dbFrequency = snapshot.val().frequency;
 
-    var timeArr = dbFirstTrain.split(" : ");
-    var trainTime = moment()
-      .hours(timeArr[0])
-      .minutes(timeArr[1]);
+  var timeArr = dbFirstTrain.split(":");
+  var trainTime = moment()
+    .hours(timeArr[0])
+    .minutes(timeArr[1]);
 
-    var maxMoment = moment.max(moment(), trainTime);
-    var tMinutes;
-    var tArrival;
+  var maxMoment = moment().max(moment(), trainTime);
+  var tMinutes;
+  var tArrival;
 
-    // If the first train is later than the current time, set arrival to be first train time
+  // If the first train is later than the current time, set arrival to be first train time
 
-    if (maxMoment === trainTime) {
-      tArrival = trainTime.format("HH:mm A");
-      tMinutes = trainTime.diff(moment(), "minutes");
-    } else {
-      // calculate minutes until arrival
+  if (maxMoment === trainTime) {
+    tArrival = trainTime.format("HH:mm A");
+    tMinutes = trainTime.diff(moment(), "minutes");
+  } else {
+    // calculate minutes until arrival
 
-      var differenceTimes = moment().diff(trainTime, "minutes");
-      var tRemainder = differenceTimes % dbFrequency;
-      tMinutes = dbFrequency - tRemainder;
+    var differenceTimes = moment().diff(trainTime, "minutes");
+    var tRemainder = differenceTimes % dbFrequency;
+    tMinutes = dbFrequency - tRemainder;
 
-      //calculate arrival time of train and adding the tMinutes to the current time
+    //calculate arrival time of train and adding the tMinutes to the current time
 
-      tArrival = moment()
-        .add(tMinutes, "m")
-        .format("HH:mm A");
-    }
-
-    console.log("tMinutes:  ", tMinutes);
-    console.log("tArrival:  ", tArrival);
-
-    //add data to applicable column on table
-
-    $("#train-list").append(
-      "<tr><td>" +
-        dbName +
-        "</td><td>" +
-        dbDestination +
-        "</td><td>" +
-        dbFrequency +
-        "</td><td>" +
-        tArrival +
-        "</td><td>" +
-        tMinutes +
-        "</td></tr>"
-    );
-  },
-  function(errorObject) {
-    console.log("Errors handled: " + errorObject.code);
+    tArrival = moment()
+      .add(tMinutes, "m")
+      .format("HH:mm A");
   }
-  //<tr>
-  //      <th scope="row" $(dbName)</th>
-  //      <td> $(dbDestination)</td>
-  //       <td> $(dbFrequency)</td>
-  //      <td> $(tArrival)</td>
-  //       <td> $(tMinutes)</td>
-  //      </tr>       `);
-);
+
+  console.log("tMinutes:  ", tMinutes);
+  console.log("tArrival:  ", tArrival);
+
+  // Create the new row
+  var newRow = $("<tr>").append(
+    $("<td>").text(dbName),
+    $("<td>").text(dbDestination),
+    $("<td>").text(dbFrequency),
+    $("<td>").text(tArrival),
+    $("<td>").text(tMinutes)
+  );
+
+  // Append the new row to the table
+  $("#train-list").append(newRow);
+});
